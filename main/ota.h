@@ -8,7 +8,13 @@
 #include "esp_netif.h"
 #include "esp_event.h" 
 #include "sdkconfig.h"
+#include "unistd.h"
 
 #define CONFIG_ESP_WIFI_MAX_RECONNECT_COUNTER 10
 
 esp_err_t wifi_init();
+
+httpd_handle_t start_browser();
+
+void connect_handler(void* arg, esp_event_base_t event_type, int32_t event_id, void* data);
+void disconnect_handler(void* arg, esp_event_base_t event_type, int32_t event_id, void* data);
