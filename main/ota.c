@@ -93,7 +93,7 @@ esp_err_t wifi_init() {
   return ESP_OK;
 }
 
-httpd_handle_t start_browser() {
+httpd_handle_t start_server() {
   httpd_handle_t server = NULL;
   httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
   if (httpd_start(&server, &server_config) == ESP_OK) {
