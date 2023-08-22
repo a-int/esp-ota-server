@@ -1,4 +1,5 @@
 #include "ota.h"
+#include "spiffs.h"
 
 void app_main()
 {
@@ -9,9 +10,9 @@ void app_main()
   ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server, NULL));
   ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server, NULL));
 
-  server = start_server();
-  while(server){
-    sleep(5);
-  }
+  const char* base_path = "/data";
+  const char* partition_label = NULL;
+  ESP_ERROR_CHECK(init_memory(base_path, partition_label)); // initialize spiffs
+  ESP_ERROR_CHECK(spiffs_health_check(partition_label));
 }
 
