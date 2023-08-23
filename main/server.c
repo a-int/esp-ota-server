@@ -106,6 +106,38 @@ static esp_err_t upload_post_handler(httpd_req_t* req) {
 }
 
 
+static esp_err_t delete_post_handler(httpd_req_t* req){
+  char fullpath[PATH_MAX];
+  const char* filename =
+      get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path, req->uri + sizeof("/upload") - 1, sizeof(fullpath));
+  //check wheter the file name lenght is ok
+  if (filename == NULL) {
+    ESP_LOGE(TAG, "The file name \"%s\" is too big", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "The file name is to big");
+    return ESP_FAIL;
+  }
+  //check wheter the file name itself is correct
+  if (filename[sizeof(filename) - 1] == '/') {
+    ESP_LOGE(TAG, "Wrong name %s", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "The file name is to big");
+    return ESP_FAIL;
+  }
+
+  struct stat st;
+  if(stat(fullpath, &st) == -1){ // if file not found
+    ESP_LOGE(TAG, "The file %s not found", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "The file not found");
+    return ESP_FAIL;
+  }
+  unlink(fullpath);
+  ESP_LOGI(TAG, "The file %s is removed", filename);
+  httpd_resp_set_status(req, "303 See Other");
+  httpd_resp_set_hdr(req, "Location", "/");
+  httpd_resp_sendstr(req, "The file is removed");
+
+  return ESP_OK;
+}
+
 esp_err_t start_server(const char* base_path) {
   static struct file_server_data* server_data = NULL; //due to static only one instance is going to be even after few calls
   if (server_data != NULL) {
@@ -132,7 +164,15 @@ esp_err_t start_server(const char* base_path) {
       .handler = upload_post_handler,
       .user_ctx = server_data
     };
+
     httpd_register_uri_handler(server, &upload);
+    httpd_uri_t delete = {
+      .uri = "/delete/*",
+      .method = HTTP_POST,
+      .handler = delete_post_handler,
+      .user_ctx = server_data
+    };
+    httpd_register_uri_handler(server, &delete);
     ESP_LOGI(TAG, "URI registering complete!");
   }
   return ESP_OK;
