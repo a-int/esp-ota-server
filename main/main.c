@@ -1,6 +1,6 @@
-#include "ota.h"
+#include "wifi.h"
 #include "spiffs.h"
-
+#include "server.h"
 void app_main()
 {
   nvs_flash_init();
@@ -14,5 +14,6 @@ void app_main()
   const char* partition_label = NULL;
   ESP_ERROR_CHECK(init_memory(base_path, partition_label)); // initialize spiffs
   ESP_ERROR_CHECK(spiffs_health_check(partition_label));
+  ESP_ERROR_CHECK(start_server(base_path));
 }
 

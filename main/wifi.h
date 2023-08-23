@@ -9,12 +9,10 @@
 #include "esp_event.h" 
 #include "sdkconfig.h"
 #include "unistd.h"
-
+#include "esp_vfs.h"
+#include "esp_types.h"
 #define CONFIG_ESP_WIFI_MAX_RECONNECT_COUNTER 10
 
 esp_err_t wifi_init();
-
-httpd_handle_t start_server();
-
 void connect_handler(void* arg, esp_event_base_t event_type, int32_t event_id, void* data);
 void disconnect_handler(void* arg, esp_event_base_t event_type, int32_t event_id, void* data);
