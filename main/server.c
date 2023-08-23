@@ -40,7 +40,7 @@ static const char* get_path_from_uri(char *dest, const char *base_path, const ch
 }
 
 static esp_err_t upload_post_handler(httpd_req_t* req) {
-  char fullpath[PATH_MAX];
+  char fullpath[FILE_PATH_MAX];
   const char* filename =
       get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path, req->uri + sizeof("/upload") - 1, sizeof(fullpath));
   //check wheter the file name lenght is ok
@@ -107,7 +107,7 @@ static esp_err_t upload_post_handler(httpd_req_t* req) {
 
 
 static esp_err_t delete_post_handler(httpd_req_t* req){
-  char fullpath[PATH_MAX];
+  char fullpath[FILE_PATH_MAX];
   const char* filename =
       get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path, req->uri + sizeof("/upload") - 1, sizeof(fullpath));
   //check wheter the file name lenght is ok
