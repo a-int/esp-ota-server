@@ -109,7 +109,7 @@ static esp_err_t upload_post_handler(httpd_req_t* req) {
 static esp_err_t delete_post_handler(httpd_req_t* req){
   char fullpath[FILE_PATH_MAX];
   const char* filename =
-      get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path, req->uri + sizeof("/upload") - 1, sizeof(fullpath));
+      get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path, req->uri + sizeof("/delete") - 1, sizeof(fullpath));
   //check wheter the file name lenght is ok
   if (filename == NULL) {
     ESP_LOGE(TAG, "The file name \"%s\" is too big", filename);
@@ -220,8 +220,8 @@ esp_err_t start_server(const char* base_path) {
       .handler = upload_post_handler,
       .user_ctx = server_data
     };
-
     httpd_register_uri_handler(server, &upload);
+
     httpd_uri_t delete = {
       .uri = "/delete/*",
       .method = HTTP_POST,
@@ -229,6 +229,7 @@ esp_err_t start_server(const char* base_path) {
       .user_ctx = server_data
     };
     httpd_register_uri_handler(server, &delete);
+
     httpd_uri_t download = {
       .uri = "/download/*",
       .method = HTTP_GET,
