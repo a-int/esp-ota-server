@@ -1,4 +1,6 @@
 #include "server.h"
+#include "esp_http_server.h"
+#include "uart.h"
 
 const char* TAG = "server";
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
@@ -194,6 +196,63 @@ static esp_err_t download_post_handler(httpd_req_t* req) {
   return ESP_OK;
 }
 
+static esp_err_t flash_post_handler(httpd_req_t* req) {
+  char fullpath[FILE_PATH_MAX];
+  const char* filename = get_path_from_uri(fullpath, ((struct file_server_data*)req->user_ctx)->base_path,
+                                           req->uri + sizeof("/flash") - 1, sizeof(fullpath));
+  //check wheter the file name lenght is ok
+  if (filename == NULL) {
+    ESP_LOGE(TAG, "The file name \"%s\" is too big", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "The file name is to big");
+    return ESP_FAIL;
+  }
+  //check wheter the file name itself is correct
+  if (filename[sizeof(filename) - 1] == '/') {
+    ESP_LOGE(TAG, "Wrong name %s", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "The file name is to big");
+    return ESP_FAIL;
+  }
+
+  struct stat st;
+  if (stat(fullpath, &st) == -1) {  // if file not found
+    ESP_LOGE(TAG, "The file %s not found", filename);
+    httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "The file not found");
+    return ESP_FAIL;
+  }
+
+  FILE* file = fopen(fullpath, "rb");
+  if (!file) {
+    ESP_LOGE(TAG, "Failed to open the file %s", filename);
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to open the file");
+    return ESP_FAIL;
+  }
+
+  // httpd_resp_set_type(req, "text/bin");
+  char* chunk = ((struct file_server_data*)req->user_ctx)->buffer;
+  int chunksize;
+  do {
+    chunksize = fread(chunk, 1, BUFFER_SIZE, file);  //read data from file and get the number of bytes
+    if (chunksize > 0) {
+      // int written = chunksize;
+      int written = sendData(chunk, chunksize);
+      if(written != chunksize){
+        ESP_LOGE(TAG, "An error occured during flashing");
+        fclose(file);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "An error occured during flashing");
+        return ESP_FAIL;
+      }
+    }
+  } while (chunksize > 0);
+  fclose(file);
+
+  httpd_resp_set_status(req, "303 See Other");
+  httpd_resp_set_hdr(req, "Location", "/");
+  httpd_resp_sendstr(req, "The file is flashed");
+
+  // ESP_LOGI(TAG, "The file %s has been flashed", filename);
+  return ESP_OK;
+}
+
 esp_err_t start_server(const char* base_path) {
   static struct file_server_data* server_data = NULL; //due to static only one instance is going to be even after few calls
   if (server_data != NULL) {
@@ -237,6 +296,14 @@ esp_err_t start_server(const char* base_path) {
       .user_ctx = server_data
     };
     httpd_register_uri_handler(server, &download);
+
+    httpd_uri_t flash = {
+      .uri = "/flash/*",
+      .method = HTTP_GET,
+      .handler = flash_post_handler,
+      .user_ctx = server_data
+    };
+    httpd_register_uri_handler(server, &flash);    
     ESP_LOGI(TAG, "URI registering complete!");
   }
   return ESP_OK;
