@@ -22,7 +22,7 @@ The following commands are supported:
     ```
 - to download the file from the server onto PC.
     ```
-    curl -X GET ip:port/download/file-name-on-server
+    curl -X GET ip:port/download/file-name-on-server > file-name-to-be-saved
     ```
 
 # Usage
