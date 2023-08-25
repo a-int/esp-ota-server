@@ -1,5 +1,5 @@
 # ESP-OTA-Server
-The basic HTTP-server with functionallity to upload, delete, download and flash binaries onto the stm32. The project is not supposed to flash the stm32 yourself, just adding the wifi feature for already written [stm bootloader](https://github.com/a-int/stm-bootloader).
+The basic HTTP-server with functionallity to upload, delete, download and flash binaries onto the stm32. The project is not supposed to flash the stm32 yourself, just adding the wifi feature for already written stm [bootloader](https://github.com/a-int/stm-bootloader).
 
 # Details
 
